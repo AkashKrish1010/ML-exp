@@ -1,0 +1,40 @@
+import pandas as pd
+
+# Read dataset
+df = pd.read_csv("sports.csv")
+
+# Separate features and target using drop()
+X = df.drop('EnjoySport', axis=1).values
+y = df['EnjoySport'].values
+
+# Initialize S and G
+S = list(X[0])  # Start with the first positive example
+G = [['?' for _ in range(len(S))]]  # Most general hypothesis
+
+# Consistency check
+def consistent(h, x):
+    return all(h[i] == x[i] or h[i] == '?' for i in range(len(h)))
+
+# Loop over training examples
+for i in range(len(X)):
+    if y[i] == 'Yes':
+        for j in range(len(S)):
+            if S[j] != X[i][j]:
+                S[j] = '?'
+        G = [g for g in G if consistent(g, X[i])]
+    else:
+        new_G = []
+        for g in G:
+            for j in range(len(g)):
+                if g[j] == '?':
+                    for val in set(df.iloc[:, j]):
+                        if val != X[i][j]:
+                            new_h = g[:]
+                            new_h[j] = val
+                            if consistent(S, new_h):
+                                new_G.append(new_h)
+        G = new_G
+
+# Print results
+print("Most Specific Hypothesis (S):", S)
+print("Most General Hypotheses (G):", G)
